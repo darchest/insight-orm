@@ -3,5 +3,3 @@ plugins {
 }
 rootProject.name = "insight-orm"
 
-include(":insight")
-project(":insight").projectDir = file("../insight")
