@@ -11,6 +11,7 @@ import org.darchest.insight.dml.Insert
 import org.darchest.insight.dml.Update
 import org.darchest.insight.impl.ReadableSelectImp
 import org.darchest.insight.impl.select
+import java.sql.Connection
 
 interface Entity<Key: Any, T: Table> {
 
@@ -59,6 +60,10 @@ interface Entity<Key: Any, T: Table> {
 
     }
 
+    suspend fun afterCreate(t: T, id: Key) {
+
+    }
+
     fun fieldsToCheck(t: T): MutableList<SqlValue<*, *>> = mutableListOf(getIdCol(t))
 
     suspend fun beforeUpdate(t: T, id: Key, srv: T) {
@@ -69,8 +74,9 @@ interface Entity<Key: Any, T: Table> {
 
     }
 
-    suspend fun read(fs: Array<SqlValue<*, *>>, where: SqlValue<*, *>? = null, sort: Array<SortInfo>? = null, limit: Long? = null, offset: Long? = null, isCount: Boolean = false) {
+    suspend fun read(fs: Array<SqlValue<*, *>>, where: SqlValue<*, *>? = null, sort: Array<SortInfo>? = null, limit: Long? = null, offset: Long? = null, isCount: Boolean = false, connection: Connection? = null) {
         val sel = ReadableSelectImp(me)
+        sel.connection = connection
         sel.fields(*fs)
         sel.where(where)
         if (sort != null)
@@ -108,6 +114,7 @@ interface Entity<Key: Any, T: Table> {
         Insert()
             .addRows(me)
             .execute()
+        afterCreate(me, id)
         return id
     }
 
