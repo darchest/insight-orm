@@ -1,19 +1,18 @@
 plugins {
-    kotlin("jvm") version "2.0.10"
-    `java-library`
+    kotlin("jvm")
     `maven-publish`
 }
 
-group = "org.darchest"
+group = "org.darchest.insight.orm"
 version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
-    implementation("org.darchest:insight:1.0-SNAPSHOT")
+    implementation(project(":annotations"))
+    implementation("com.google.devtools.ksp:symbol-processing-api:2.0.10-1.0.24")
 
     testImplementation(kotlin("test"))
 }
@@ -27,7 +26,7 @@ kotlin {
 
 publishing {
     publications {
-        create<MavenPublication>("mavenJava") {
+        create<MavenPublication>("release") {
             from(components["java"])
         }
     }

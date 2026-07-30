@@ -3,3 +3,5 @@ plugins {
 }
 rootProject.name = "insight-orm"
 
+include("annotations")
+include("insight-orm-ksp")
