@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":annotations"))
+    implementation(project(":insight-orm-annotations"))
     implementation("com.google.devtools.ksp:symbol-processing-api:2.0.10-1.0.24")
 
     testImplementation(kotlin("test"))
