@@ -101,8 +101,14 @@ class AutoEntityProcessor(
             return
         }
 
+        val originFiles = buildList {
+            add(containingFile)
+            defaultParents.mapNotNullTo(this) { it.containingFile }
+            base.containingFile?.let { add(it) }
+        }.distinct()
+
         val file = codeGenerator.createNewFile(
-            Dependencies(false, containingFile),
+            Dependencies(aggregating = true, *originFiles.toTypedArray()),
             genPackage,
             entityName
         )
