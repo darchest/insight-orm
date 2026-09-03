@@ -52,7 +52,7 @@ interface Entity<Key: Any, T: Table> {
         return keys
     }
 
-    suspend fun beforeRead(select: ReadableSelect<T>, isCount: Boolean) {
+    suspend fun beforeRead(select: ReadableSelect<T>) {
 
     }
 
@@ -83,7 +83,7 @@ interface Entity<Key: Any, T: Table> {
             sel.sort(*sort)
         sel.limit(limit)
         sel.offset(offset)
-        beforeRead(sel, isCount)
+        beforeRead(sel)
         sel.read()
         cursor = sel
     }
@@ -98,7 +98,7 @@ interface Entity<Key: Any, T: Table> {
             sel.sort(*sort)
         sel.limit(limit)
         sel.offset(offset)
-        beforeRead(sel, isCount)
+        beforeRead(sel)
         sel.read()
         cursor = sel
     }
