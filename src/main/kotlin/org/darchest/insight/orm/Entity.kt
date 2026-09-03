@@ -88,6 +88,21 @@ interface Entity<Key: Any, T: Table> {
         cursor = sel
     }
 
+    suspend fun groupBy(groupFields: Collection<SqlValue<*, *>>, fields: Collection<SqlValue<*, *>>, where: SqlValue<*, *>? = null, sort: Array<SortInfo>? = null, limit: Long? = null, offset: Long? = null, isCount: Boolean = false, connection: Connection? = null) {
+        val sel = ReadableSelectImp(me)
+        sel.connection = connection
+        sel.groupBy(groupFields)
+        sel.fields(fields)
+        sel.where(where)
+        if (sort != null)
+            sel.sort(*sort)
+        sel.limit(limit)
+        sel.offset(offset)
+        beforeRead(sel, isCount)
+        sel.read()
+        cursor = sel
+    }
+
     fun next() = cursor!!.next()
 
     suspend fun createIfNotExist(id: Key) {
