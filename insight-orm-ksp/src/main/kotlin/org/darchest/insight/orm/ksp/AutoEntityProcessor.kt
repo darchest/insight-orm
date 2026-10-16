@@ -119,7 +119,7 @@ class AutoEntityProcessor(
             writer.write("import $tableQualified\n\n")
             writer.write("open class $entityName : $baseName<$tableName>(::$tableName) {\n")
             for (prop in properties) {
-                val name = prop.simpleName.asString()
+                val name = escapeIdentifier(prop.simpleName.asString())
                 writer.write("    val $name get() = me.$name\n")
             }
             writer.write("}\n")
@@ -204,6 +204,13 @@ class AutoEntityProcessor(
         return names
     }
 
+    private fun escapeIdentifier(name: String): String =
+        if (name in HARD_KEYWORDS || !IDENTIFIER_PATTERN.matches(name) || name.all { it == '_' }) {
+            "`$name`"
+        } else {
+            name
+        }
+
     private fun KSAnnotation.argumentAsType(name: String): KSType? {
         val value = arguments.firstOrNull { it.name?.asString() == name }?.value
         return value as? KSType
@@ -211,6 +218,14 @@ class AutoEntityProcessor(
 
     companion object {
         const val CLASS_NAME_TEMPLATE_OPTION = "org.darchest.insight.orm.classNameTemplate"
+
+        private val IDENTIFIER_PATTERN = Regex("[\\p{L}_][\\p{L}\\p{Nd}_]*")
+
+        private val HARD_KEYWORDS = setOf(
+            "as", "break", "class", "continue", "do", "else", "false", "for", "fun", "if",
+            "in", "interface", "is", "null", "object", "package", "return", "super", "this",
+            "throw", "true", "try", "typealias", "typeof", "val", "var", "when", "while"
+        )
 
         private val STOP_SUPERTYPES = setOf(
             "org.darchest.insight.Table",
