@@ -64,6 +64,11 @@ interface Entity<Key: Any, T: Table> {
 
     }
 
+    /** Called with the prepared copy and the source record ID. */
+    suspend fun beforeCopy(t: T, sourceId: Key) {
+
+    }
+
     fun fieldsToCheck(t: T): MutableList<SqlValue<*, *>> = mutableListOf(getIdCol(t))
 
     suspend fun beforeUpdate(t: T, id: Key, srv: T) {
@@ -131,6 +136,37 @@ interface Entity<Key: Any, T: Table> {
             .execute()
         afterCreate(me, id)
         return id
+    }
+
+    suspend fun copy(id: Key): Key {
+        val columns = me.columns()
+        require(columns.none { it.state == SqlValue.State.EXPR_SET }) { "Copy requires concrete column values" }
+        val keyColumn = getIdCol(me)
+        val newId = if (keyColumn.state == SqlValue.State.VALUE_SET) {
+            requireNotNull(keyColumn.getValue()) { "The copy's primary key must have a value" }
+        } else null
+
+        val targetColumns = columns.filter { it.name != keyColumn.name && it.state != SqlValue.State.VALUE_SET }
+        val source = tableFactory()
+        val sourceColumns = targetColumns.map { source.column(it.name) }
+        val sel = select(source) {
+            fields(sourceColumns.ifEmpty { listOf(getIdCol(source)) })
+            where(eqIdExpr(source, id))
+            limit(1)
+        }
+        beforeRead(sel)
+        sel.read()
+        if (!sel.next()) throw RuntimeException("Record not found to copy $id")
+
+        val sourceValues = sourceColumns.map { it.getValue() }
+        for ((index, target) in targetColumns.withIndex()) {
+            target.state = SqlValue.State.NOT_SET
+            @Suppress("UNCHECKED_CAST")
+            (target as TableColumn<Any, *>)(sourceValues[index])
+        }
+        if (keyColumn.state == SqlValue.State.READED) keyColumn.state = SqlValue.State.NOT_SET
+        beforeCopy(me, id)
+        return if (newId == null) create() else create(newId)
     }
 
     suspend fun update(id: Key): Int {
